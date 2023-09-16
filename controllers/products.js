@@ -2,7 +2,7 @@ const Product = require("../models/product");
 const { StatusCodes } = require("http-status-codes");
 
 const getAllProducts = async (req, res) => {
-  const { featured, company, name } = req.query;
+  const { featured, company, name, sort } = req.query;
 
   const queryObject = {};
 
@@ -18,17 +18,23 @@ const getAllProducts = async (req, res) => {
     queryObject.name = { $regex: name, $options: "i" };
   }
 
-  const products = await Product.find(queryObject);
+  const result = Product.find(queryObject);
+
+  if (sort) {
+    const sortList = sort.split(",").join(" ");
+    result = result.sort(sortList);
+  } else {
+    result = result.sort("createdAt");
+  }
+
+  const products = await result;
 
   res.status(StatusCodes.OK).json({ products, count: products.length });
 };
 
 // static
 const getAllProductsStatic = async (req, res) => {
-  const search = "bed";
-  const products = await Product.find({
-    name: { $regex: search, $options: "i" },
-  });
+  const products = await Product.find({}).sort(" price");
 
   res.status(StatusCodes.OK).json({ products, count: products.length });
 };
