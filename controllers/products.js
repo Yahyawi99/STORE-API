@@ -2,7 +2,7 @@ const Product = require("../models/product");
 const { StatusCodes } = require("http-status-codes");
 
 const getAllProducts = async (req, res) => {
-  const { featured, company, name, sort } = req.query;
+  const { featured, company, name, sort, select } = req.query;
 
   const queryObject = {};
 
@@ -18,8 +18,9 @@ const getAllProducts = async (req, res) => {
     queryObject.name = { $regex: name, $options: "i" };
   }
 
-  const result = Product.find(queryObject);
+  let result = Product.find(queryObject);
 
+  // Sort
   if (sort) {
     const sortList = sort.split(",").join(" ");
     result = result.sort(sortList);
@@ -27,16 +28,19 @@ const getAllProducts = async (req, res) => {
     result = result.sort("createdAt");
   }
 
+  // Select
+  if (select) {
+    const selectList = select.split(",").join(" ");
+    result = result.select(selectList);
+  }
+
   const products = await result;
 
   res.status(StatusCodes.OK).json({ products, count: products.length });
 };
 
-// static
 const getAllProductsStatic = async (req, res) => {
-  const products = await Product.find({}).sort(" price");
-
-  res.status(StatusCodes.OK).json({ products, count: products.length });
+  res.send();
 };
 
 module.exports = {
